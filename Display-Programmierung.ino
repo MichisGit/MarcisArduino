@@ -1,0 +1,140 @@
+/***************************************************************************
+* Example sketch for the ina219_1_WE library
+*
+* This sketch shows how to use the ina219_1 module in continuous mode. 
+*  
+* Further information can be found on:
+* https://wolles-elektronikkiste.de/ina219_1 (German)
+* https://wolles-elektronikkiste.de/en/ina219_1-current-and-power-sensor (English)
+* 
+***************************************************************************/
+#include <Wire.h>
+//#include <ina219_WE.h>
+#include <INA219_WE.h>
+
+#define I2C_ADDRESS_1 0x40
+#define I2C_ADDRESS_2 0x41
+
+/* There are several ways to create your ina219_1 object:
+ * ina219_1_WE ina219_1 = ina219_1_WE(); -> uses Wire / I2C Address = 0x40
+ * ina219_1_WE ina219_1 = ina219_1_WE(I2C_ADDRESS); -> uses Wire / I2C_ADDRESS
+ * ina219_1_WE ina219_1 = ina219_1_WE(&Wire); -> you can pass any TwoWire object
+ * ina219_1_WE ina219_1 = ina219_1_WE(&Wire, I2C_ADDRESS); -> all together
+ */
+INA219_WE ina219_1 = INA219_WE(I2C_ADDRESS_1);
+
+INA219_WE ina219_2 = INA219_WE(I2C_ADDRESS_2);
+
+void setup() {
+  Serial.begin(9600);
+  Wire.begin();
+  if(!ina219_1.init()){
+    Serial.println("ina219_1 not connected!");
+    while(1);
+  }
+  if(!ina219_2.init()){
+    Serial.println("ina219_2 not connected!");
+    while(1);
+  }
+
+  /* Set ADC Mode for Bus and ShuntVoltage
+  * Mode *            * Res / Samples *       * Conversion Time *
+  BIT_MODE_9        9 Bit Resolution             84 µs
+  BIT_MODE_10       10 Bit Resolution            148 µs  
+  BIT_MODE_11       11 Bit Resolution            276 µs
+  BIT_MODE_12       12 Bit Resolution            532 µs  (DEFAULT)
+  SAMPLE_MODE_2     Mean Value 2 samples         1.06 ms
+  SAMPLE_MODE_4     Mean Value 4 samples         2.13 ms
+  SAMPLE_MODE_8     Mean Value 8 samples         4.26 ms
+  SAMPLE_MODE_16    Mean Value 16 samples        8.51 ms     
+  SAMPLE_MODE_32    Mean Value 32 samples        17.02 ms
+  SAMPLE_MODE_64    Mean Value 64 samples        34.05 ms
+  SAMPLE_MODE_128   Mean Value 128 samples       68.10 ms
+  */
+  //ina219_1.setADCMode(SAMPLE_MODE_128); // choose mode and uncomment for change of default
+  
+  /* Set measure mode
+  POWER_DOWN - ina219_1 switched off
+  TRIGGERED  - measurement on demand
+  ADC_OFF    - Analog/Digital Converter switched off
+  CONTINUOUS  - Continuous measurements (DEFAULT)
+  */
+  // ina219_1.setMeasureMode(CONTINUOUS); // choose mode and uncomment for change of default
+  
+  /* Set PGain
+  * Gain *  * Shunt Voltage Range *   * Max Current (if shunt is 0.1 ohms) *
+   PG_40       40 mV                    0.4 A
+   PG_80       80 mV                    0.8 A
+   PG_160      160 mV                   1.6 A
+   PG_320      320 mV                   3.2 A (DEFAULT)
+  */
+  // ina219_1.setPGain(PG_320); // choose gain and uncomment for change of default
+  
+  /* Set Bus Voltage Range
+   BRNG_16   -> 16 V
+   BRNG_32   -> 32 V (DEFAULT)
+  */
+  // ina219_1.setBusRange(BRNG_32); // choose range and uncomment for change of default
+
+  Serial.println("ina219_1 Current Sensor Example Sketch - Continuous");
+
+  /* If the current values delivered by the ina219_1 differ by a constant factor
+     from values obtained with calibrated equipment you can define a correction factor.
+     Correction factor = current delivered from calibrated equipment / current delivered by ina219_1
+  */
+  // ina219_1.setCorrectionFactor(0.98); // insert your correction factor if necessary
+  
+  /* If you experience a shunt voltage offset, that means you detect a shunt voltage which is not 
+     zero, although the current should be zero, you can apply a correction. For this, uncomment the 
+     following function and apply the offset you have detected.   
+  */
+  // ina219_1.setShuntVoltOffset_mV(0.5); // insert the shunt voltage (millivolts) you detect at zero current 
+}
+
+void loop() {
+
+// Serieller Monitor benutzen und Taster up,down für mehr Anzeigen mit Variable für welche Anzeige 
+// Stromstärke Vergleichen von ersten und zweiten Sensor für Zufluss oder Ladung des Kondensators 
+// Zeit messung für Ladung des Kondensators 
+
+  float busVoltage_V_1 = 0.0; // benutzen
+  float current_mA_1 = 0.0; // benutzen
+  float power_mW_1 = 0.0;  // fragen sonst rechnen
+  bool ina219_1_overflow = false;
+  
+  float busVoltage_V_2 = 0.0; // benutzen
+  float current_mA_2 = 0.0; // benutzen
+  float power_mW_2 = 0.0;  // fragen sonst rechnen
+  bool ina219_2_overflow = false;
+  
+  busVoltage_V_1 = ina219_1.getBusVoltage_V();
+  current_mA_1 = ina219_1.getCurrent_mA();
+  power_mW_1 = ina219_1.getBusPower();
+  ina219_1_overflow = ina219_1.getOverflow();
+  
+  busVoltage_V_2 = ina219_2.getBusVoltage_V();
+  current_mA_2 = ina219_2.getCurrent_mA();
+  power_mW_2 = ina219_2.getBusPower();
+  ina219_2_overflow = ina219_2.getOverflow();
+  
+  Serial.print("Bus Voltage 1 [V]: "); Serial.println(busVoltage_V_1);
+  Serial.print("Current 1 [mA]: "); Serial.println(current_mA_1);
+  Serial.print("Bus Power 1 [mW]: "); Serial.println(power_mW_1);
+  
+  Serial.print("Bus Voltage 2 [V]: "); Serial.println(busVoltage_V_2);
+  Serial.print("Current 2 [mA]: "); Serial.println(current_mA_2);
+  Serial.print("Bus Power 2 [mW]: "); Serial.println(power_mW_2);
+  
+  if(!ina219_1_overflow){
+    Serial.println("Values OK - no overflow");
+  }  
+  else if(!ina219_2_overflow){
+    Serial.println("Values OK - no overflow");
+  }
+  else{
+    Serial.println("Overflow! Choose higher PGAIN");
+  }
+  Serial.println();
+  
+  delay(3000);
+}
