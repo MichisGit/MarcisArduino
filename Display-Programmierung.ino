@@ -11,9 +11,15 @@
 #include <Wire.h>
 //#include <ina219_WE.h>
 #include <INA219_WE.h>
+#include <LiquidCrystal.h>
 
 #define I2C_ADDRESS_1 0x40
 #define I2C_ADDRESS_2 0x41
+
+#define ONLYONE true
+#define LCDBright A1
+
+int interval 500     //  500ms
 
 /* There are several ways to create your ina219_1 object:
  * ina219_1_WE ina219_1 = ina219_1_WE(); -> uses Wire / I2C Address = 0x40
@@ -25,6 +31,13 @@ INA219_WE ina219_1 = INA219_WE(I2C_ADDRESS_1);
 
 INA219_WE ina219_2 = INA219_WE(I2C_ADDRESS_2);
 
+const int rs = 8, en = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
+
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+
+
+
 void setup() {
   Serial.begin(9600);
   Wire.begin();
@@ -34,9 +47,16 @@ void setup() {
   }
   if(!ina219_2.init()){
     Serial.println("ina219_2 not connected!");
-    while(1);
+    //while(1);
   }
+  // set up the LCD's number of columns and rows:
+  analogWrite(LCDBright,80);
+  
+  lcd.begin(16, 2);
 
+  // Print a message to the LCD.
+
+  lcd.print("hello, Marci!");
   /* Set ADC Mode for Bus and ShuntVoltage
   * Mode *            * Res / Samples *       * Conversion Time *
   BIT_MODE_9        9 Bit Resolution             84 µs
@@ -93,6 +113,17 @@ void setup() {
 
 void loop() {
 
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    // save the last time you measured something
+    previousMillis = currentMillis;
+
+    // Do something here
+    measurementFunction();
+  }
+}
+
+
 // Serieller Monitor benutzen und Taster up,down für mehr Anzeigen mit Variable für welche Anzeige 
 // Stromstärke Vergleichen von ersten und zweiten Sensor für Zufluss oder Ladung des Kondensators 
 // Zeit messung für Ladung des Kondensators 
@@ -112,18 +143,21 @@ void loop() {
   power_mW_1 = ina219_1.getBusPower();
   ina219_1_overflow = ina219_1.getOverflow();
   
+  if (!ONLYONE) {
   busVoltage_V_2 = ina219_2.getBusVoltage_V();
   current_mA_2 = ina219_2.getCurrent_mA();
   power_mW_2 = ina219_2.getBusPower();
   ina219_2_overflow = ina219_2.getOverflow();
-  
+  }
   Serial.print("Bus Voltage 1 [V]: "); Serial.println(busVoltage_V_1);
   Serial.print("Current 1 [mA]: "); Serial.println(current_mA_1);
   Serial.print("Bus Power 1 [mW]: "); Serial.println(power_mW_1);
-  
+
+  if (!ONLYONE) {
   Serial.print("Bus Voltage 2 [V]: "); Serial.println(busVoltage_V_2);
   Serial.print("Current 2 [mA]: "); Serial.println(current_mA_2);
   Serial.print("Bus Power 2 [mW]: "); Serial.println(power_mW_2);
+  }
   
   if(!ina219_1_overflow){
     Serial.println("Values OK - no overflow");
@@ -136,5 +170,40 @@ void loop() {
   }
   Serial.println();
   
-  delay(3000);
+ 
+}
+
+/*
+unsigned long previousMillis = 0;
+const long interval = 100;
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(115200);
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    // save the last time you blinked the LED
+    previousMillis = currentMillis;
+
+    // Do something here
+    measurementFunction();
+  }
+}
+
+void measurementFunction() {
+    // Your code to perform the measurement goes here
+    Serial.println("Measuring...");
+}
+*/
+
+//  function um Power zu berechnen
+
+
+float calculatePower(float voltage, float current) {
+  // Calculate power using the formula: Power (Watts) = Voltage (Volts) * Current (Amps)
+  float power = voltage * current;
+  return power;
 }
