@@ -18,6 +18,7 @@
 
 #define ONLYONE true
 #define LCDBright A1
+#define MAXLINES 5
 
 int interval 500     //  500ms
 
@@ -39,6 +40,9 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 
 void setup() {
+  //Zeilen variable
+  int x = 0;
+  
   Serial.begin(9600);
   Wire.begin();
   if(!ina219_1.init()){
@@ -121,13 +125,19 @@ void loop() {
     // Do something here
     measurementFunction();
   }
+  getTaste()
+  int analogWert = analogRead(A0)
+  //UP
+  if (analogWert>50&&analogWert<150&&x>0){
+        x++;
+    }
+    //DOWN
+  if (analogWert>200&&analogWert<300&&x<MAXLINES){
+        x--;
+    }
 }
 
-
-// Serieller Monitor benutzen und Taster up,down für mehr Anzeigen mit Variable für welche Anzeige 
-// Stromstärke Vergleichen von ersten und zweiten Sensor für Zufluss oder Ladung des Kondensators 
-// Zeit messung für Ladung des Kondensators 
-
+   void measurementFunction(){
   float busVoltage_V_1 = 0.0; // benutzen
   float current_mA_1 = 0.0; // benutzen
   float power_mW_1 = 0.0;  // fragen sonst rechnen
@@ -149,6 +159,14 @@ void loop() {
   power_mW_2 = ina219_2.getBusPower();
   ina219_2_overflow = ina219_2.getOverflow();
   }
+   }
+
+
+// Serieller Monitor benutzen und Taster up,down für mehr Anzeigen mit Variable für welche Anzeige 
+// Stromstärke Vergleichen von ersten und zweiten Sensor für Zufluss oder Ladung des Kondensators 
+// Zeit messung für Ladung des Kondensators 
+
+  
   Serial.print("Bus Voltage 1 [V]: "); Serial.println(busVoltage_V_1);
   Serial.print("Current 1 [mA]: "); Serial.println(current_mA_1);
   Serial.print("Bus Power 1 [mW]: "); Serial.println(power_mW_1);
