@@ -21,7 +21,7 @@
 #define MAXLINES 3
 
 unsigned long previousMillis = 0;
-const long interval = 800; // 500ms
+const long interval = 200; // 500ms
 
 /* There are several ways to create your ina219_1 object:
  * ina219_1_WE ina219_1 = ina219_1_WE(); -> uses Wire / I2C Address = 0x40
@@ -62,7 +62,7 @@ void setup()
     // while(1);
   }
   // set up the LCD's number of columns and rows:
-  analogWrite(LCDBright, 80);
+  analogWrite(LCDBright, 78);
   lcd.begin(16, 2);
 
   // Print a message to the LCD.
@@ -82,7 +82,7 @@ void setup()
   SAMPLE_MODE_64    Mean Value 64 samples        34.05 ms
   SAMPLE_MODE_128   Mean Value 128 samples       68.10 ms
   */
-   ina219_1.setADCMode(SAMPLE_MODE_32); // choose mode and uncomment for change of default
+   //ina219_1.setADCMode(SAMPLE_MODE_32); // choose mode and uncomment for change of default
 
   /* Set measure mode
   POWER_DOWN - ina219_1 switched off
@@ -113,13 +113,15 @@ void setup()
      from values obtained with calibrated equipment you can define a correction factor.
      Correction factor = current delivered from calibrated equipment / current delivered by ina219_1
   */
-  // ina219_1.setCorrectionFactor(0.98); // insert your correction factor if necessary
+   ina219_1.setCorrectionFactor(0.84); // insert your correction factor if necessary
+   ina219_2.setCorrectionFactor(0.84); // insert your correction factor if necessary
 
   /* If you experience a shunt voltage offset, that means you detect a shunt voltage which is not
      zero, although the current should be zero, you can apply a correction. For this, uncomment the
      following function and apply the offset you have detected.
   */
-  // ina219_1.setShuntVoltOffset_mV(0.5); // insert the shunt voltage (millivolts) you detect at zero current
+   ina219_1.setShuntVoltOffset_mV(0); // insert the shunt voltage (millivolts) you detect at zero current
+   ina219_2.setShuntVoltOffset_mV(-0.02); // insert the shunt voltage (millivolts) you detect at zero current
 }
 
 void loop()
@@ -141,6 +143,7 @@ void loop()
 void getTaste()
 {
   int analogWert = analogRead(A0);
+  Serial.println(analogWert);
   // UP
   if (analogWert > 50 && analogWert < 150 && x > 0)
   {
@@ -158,7 +161,7 @@ void getTaste()
 
 
 void LCD_OUTPUT() {
-  char buffer[16], floatStr[10];
+  char buffer[16], floatStr[16];
   lcd.clear();
   lcd.setCursor(0,0);
   if (x=0){
@@ -168,34 +171,34 @@ void LCD_OUTPUT() {
     lcd.print(buffer);
     lcd.setCursor(0,1);
     dtostrf(P_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "P am V: %.2f mW",floatStr );
+    sprintf(buffer, "P am V: %s mW",floatStr );
     lcd.print(buffer);
     }
     else if (x=1){
     dtostrf(P_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "P am V: %.2f mW",floatStr ); 
+    sprintf(buffer, "P am V: %s mW",floatStr ); 
     lcd.print(buffer);
     lcd.setCursor(0,1);
     dtostrf(I_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "I am V: %.2f mA", floatStr);
+    sprintf(buffer, "I am V: %s mA", floatStr);
     lcd.print(buffer);
     }
     else if (x=2){
     dtostrf(I_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "I am V: %.2f mA",floatStr ); 
+    sprintf(buffer, "I am V: %s mA",floatStr ); 
     lcd.print(buffer);
     lcd.setCursor(0,1);
     dtostrf(Q_S, 8, 1, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "Landung: %.2f mAs",floatStr );
+    sprintf(buffer, "Landung: %s mAs",floatStr );
     lcd.print(buffer);
     }
     else if (x=3){
     dtostrf(Q_S, 8, 1, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "Landung: %.2f mAs",floatStr); 
+    sprintf(buffer, "Landung: %s mAs",floatStr); 
     lcd.print(buffer);
     lcd.setCursor(0,1);
     dtostrf(P_S, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "Lade P: %.2f mW",floatStr );
+    sprintf(buffer, "Lade P: %s mW",floatStr );
     lcd.print(buffer);
     }
    
@@ -245,9 +248,8 @@ void measurementFunction()
   }
   Uges = busVoltage_V_1;
   P_V = power_mW_2;
-  I_V = current_mA_2;
+  I_V = current_mA_1;
   float Qsalt = Q_S;
   Q_S = Qsalt +(current_mA_1 - current_mA_2)/1000 * interval ; // (interval / 1000);
   P_S = power_mW_1 - power_mW_2;
 }
-
