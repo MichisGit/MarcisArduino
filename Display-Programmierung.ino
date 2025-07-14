@@ -18,7 +18,7 @@
 
 #define ONLYONE true
 #define LCDBright A1
-#define MAXLINES 5
+#define MAXLINES 3
 
 unsigned long previousMillis = 0;
 const long interval = 500; // 500ms
@@ -133,6 +133,8 @@ void loop()
 
     // Do something here
     measurementFunction();
+    LCD_OUTPUT();
+    Serial_OUTPUT();
   }
   getTaste();
 }
@@ -142,13 +144,13 @@ void getTaste()
   // UP
   if (analogWert > 50 && analogWert < 150 && x > 0)
   {
-    x++;
+    x--;
     LCD_OUTPUT();
   }
   // DOWN
   if (analogWert > 200 && analogWert < 300 && x < MAXLINES)
   {
-    x--;
+    x++;
     LCD_OUTPUT();
   }
 }
@@ -157,11 +159,43 @@ void LCD_OUTPUT() {
   if (x=0){
     sprintf(buffer, "Spannung: %.2f V", Uges); 
     lcd.print(buffer);
-    sprintf(buffer, "Spannung: %.2f V", Uges);
+    sprintf(buffer, "P am V: %.2f mW", P_V);
     lcd.print(buffer);
     }
+    else if (x=1){
+    sprintf(buffer, "P am V: %.2f mW", P_V); 
+    lcd.print(buffer);
+    sprintf(buffer, "I am V: %.2f mA", I_V);
+    lcd.print(buffer);
+    }
+    else if (x=2){
+    sprintf(buffer, "I am V: %.2f mA", I_V); 
+    lcd.print(buffer);
+    sprintf(buffer, "Landung: %.2f mAs", Q_S);
+    lcd.print(buffer);
+    }
+    else if (x=3){
+    sprintf(buffer, "Landung: %.2f mAs", Q_S); 
+    lcd.print(buffer);
+    sprintf(buffer, "Lade P: %.2f mW", P_S);
+    lcd.print(buffer);
+    }
+   
   
   }
+  void Serial_OUTPUT()
+{
+  Serial.print("Spannung Zelle [V]: ");
+  Serial.println(Uges);
+  Serial.print("Ausgangsstromstärke I [mA]: ");
+  Serial.println(I_V);
+  Serial.print("Ausgangsleistung P [mW]: ");
+  Serial.println(P_V);
+  Serial.print("Ladung Kondensator Q [mAs]:");
+  Serial.println(Q_S);
+  Serial.print("LadeLeistung P [mW]: ");
+  Serial.println(P_S);
+}
 void measurementFunction()
 {
   float busVoltage_V_1 = 0.0; // benutzen
@@ -193,41 +227,3 @@ void measurementFunction()
   P_S = power_mW_1 - power_mW_2;
 }
 
-// Serieller Monitor benutzen und Taster up,down für mehr Anzeigen mit Variable für welche Anzeige
-// Stromstärke Vergleichen von ersten und zweiten Sensor für Zufluss oder Ladung des Kondensators
-// Zeit messung für Ladung des Kondensators
-
-void Serial_OUTPUT()
-{
-  Serial.print("Spannung Zelle [V]: ");
-  Serial.println(Uges);
-  Serial.print("Ausgangsstromstärke I [mA]: ");
-  Serial.println(I_V);
-  Serial.print("Ausgangsleistung P [mW]: ");
-  Serial.println(P_V);
-  Serial.print("Ladung Kondensator Q [mAs]:");
-  Serial.println(Q_S);
-  Serial.print("LadeLeistung P [mW]: ");
-  Serial.println(P_S);
-
-  /* if(!ina219_1_overflow){
-     Serial.println("Values OK - no overflow");
-   }
-   else if(!ina219_2_overflow){
-     Serial.println("Values OK - no overflow");
-   }
-   else{
-     Serial.println("Overflow! Choose higher PGAIN");
-   }
-   Serial.println();
-   */
-}
-
-//  function um Power zu berechnen
-
-float calculatePower(float voltage, float current)
-{
-  // Calculate power using the formula: Power (Watts) = Voltage (Volts) * Current (Amps)
-  float power = voltage * current;
-  return power;
-}
