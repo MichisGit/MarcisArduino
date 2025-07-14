@@ -1,7 +1,7 @@
 /***************************************************************************
- * Example sketch for the ina219_1_WE library
  *
- * This sketch shows how to use the ina219_1 module in continuous mode.
+ *
+ * Max&Marcel Displayprogrammierung based on Example of INA219_WE
  *
  * Further information can be found on:
  * https://wolles-elektronikkiste.de/ina219_1 (German)
@@ -9,7 +9,6 @@
  *
  ***************************************************************************/
 #include <Wire.h>
-// #include <ina219_WE.h>
 #include <INA219_WE.h>
 #include <LiquidCrystal.h>
 
@@ -21,7 +20,7 @@
 #define MAXLINES 3
 
 unsigned long previousMillis = 0;
-const long interval = 200; // 500ms
+const long interval = 200; // 200ms
 
 /* There are several ways to create your ina219_1 object:
  * ina219_1_WE ina219_1 = ina219_1_WE(); -> uses Wire / I2C Address = 0x40
@@ -36,8 +35,8 @@ INA219_WE ina219_2 = INA219_WE(I2C_ADDRESS_2);
 const int rs = 8, en = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
-
-int x = 0;
+// globale Variablen
+int x = 0; // Zeilen variable
 float Uges = 0;
 float P_V = 0;
 float I_V = 0;
@@ -46,7 +45,6 @@ float P_S = 0;
 
 void setup()
 {
-  // Zeilen variable
 
   Serial.begin(9600);
   Wire.begin();
@@ -67,7 +65,7 @@ void setup()
 
   // Print a message to the LCD.
 
-  lcd.print("hello, Marci!");
+  lcd.print("hello world!");
   /* Set ADC Mode for Bus and ShuntVoltage
   * Mode *            * Res / Samples *       * Conversion Time *
   BIT_MODE_9        9 Bit Resolution             84 µs
@@ -82,7 +80,7 @@ void setup()
   SAMPLE_MODE_64    Mean Value 64 samples        34.05 ms
   SAMPLE_MODE_128   Mean Value 128 samples       68.10 ms
   */
-   //ina219_1.setADCMode(SAMPLE_MODE_32); // choose mode and uncomment for change of default
+  // ina219_1.setADCMode(SAMPLE_MODE_32); // choose mode and uncomment for change of default
 
   /* Set measure mode
   POWER_DOWN - ina219_1 switched off
@@ -113,20 +111,20 @@ void setup()
      from values obtained with calibrated equipment you can define a correction factor.
      Correction factor = current delivered from calibrated equipment / current delivered by ina219_1
   */
-   ina219_1.setCorrectionFactor(0.84); // insert your correction factor if necessary
-   ina219_2.setCorrectionFactor(0.84); // insert your correction factor if necessary
+  ina219_1.setCorrectionFactor(0.84); // insert your correction factor if necessary
+  ina219_2.setCorrectionFactor(0.84); // insert your correction factor if necessary
 
   /* If you experience a shunt voltage offset, that means you detect a shunt voltage which is not
      zero, although the current should be zero, you can apply a correction. For this, uncomment the
      following function and apply the offset you have detected.
   */
-   ina219_1.setShuntVoltOffset_mV(0); // insert the shunt voltage (millivolts) you detect at zero current
-   ina219_2.setShuntVoltOffset_mV(-0.02); // insert the shunt voltage (millivolts) you detect at zero current
+  ina219_1.setShuntVoltOffset_mV(0);     // insert the shunt voltage (millivolts) you detect at zero current
+  ina219_2.setShuntVoltOffset_mV(-0.02); // insert the shunt voltage (millivolts) you detect at zero current
 }
 
 void loop()
 {
-
+  // timemeasurement for integration
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= interval)
   {
@@ -140,6 +138,8 @@ void loop()
   }
   getTaste();
 }
+
+//  Tastendruckerfassung
 void getTaste()
 {
   int analogWert = analogRead(A0);
@@ -158,66 +158,64 @@ void getTaste()
   }
 }
 
-
-
-void LCD_OUTPUT() {
+// Ausgabe wechselder Zeilen LCD
+void LCD_OUTPUT()
+{
   char buffer[16], floatStr[16];
   lcd.clear();
-  lcd.setCursor(0,0);
-  if (x=0){
-      
-    dtostrf(Uges, 4, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
+  lcd.setCursor(0, 0);
+  if (x = 0)
+  {
+
+    dtostrf(Uges, 4, 2, floatStr); // (Wert, Breite, Nachkommastellen, Zielpuffer)
     sprintf(buffer, "Spannung: %s V", floatStr);
     lcd.print(buffer);
-    lcd.setCursor(0,1);
-    dtostrf(P_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "P am V: %s mW",floatStr );
+    lcd.setCursor(0, 1);
+    dtostrf(P_V, 5, 2, floatStr); // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "P am V: %s mW", floatStr);
     lcd.print(buffer);
-    }
-    else if (x=1){
-    dtostrf(P_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "P am V: %s mW",floatStr ); 
+  }
+  else if (x = 1)
+  {
+    dtostrf(P_V, 5, 2, floatStr); // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "P am V: %s mW", floatStr);
     lcd.print(buffer);
-    lcd.setCursor(0,1);
-    dtostrf(I_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    lcd.setCursor(0, 1);
+    dtostrf(I_V, 5, 2, floatStr); // (Wert, Breite, Nachkommastellen, Zielpuffer)
     sprintf(buffer, "I am V: %s mA", floatStr);
     lcd.print(buffer);
-    }
-    else if (x=2){
-    dtostrf(I_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "I am V: %s mA",floatStr ); 
-    lcd.print(buffer);
-    lcd.setCursor(0,1);
-    dtostrf(Q_S, 8, 1, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "Landung: %s mAs",floatStr );
-    lcd.print(buffer);
-    }
-    else if (x=3){
-    dtostrf(Q_S, 8, 1, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "Landung: %s mAs",floatStr); 
-    lcd.print(buffer);
-    lcd.setCursor(0,1);
-    dtostrf(P_S, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-    sprintf(buffer, "Lade P: %s mW",floatStr );
-    lcd.print(buffer);
-    }
-   
-  
   }
-  void Serial_OUTPUT()
-{ 
-  char floatStr[10];
-  dtostrf(I_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
-  char buffer[17];
-  sprintf(buffer, "PamV: %s mW", floatStr);
-  Serial.println(buffer);
+  else if (x = 2)
+  {
+    dtostrf(I_V, 5, 2, floatStr); // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "I am V: %s mA", floatStr);
+    lcd.print(buffer);
+    lcd.setCursor(0, 1);
+    dtostrf(Q_S, 8, 1, floatStr); // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "Landung: %smC", floatStr);
+    lcd.print(buffer);
+  }
+  else if (x = 3)
+  {
+    dtostrf(Q_S, 8, 1, floatStr); // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "Landung: %smC", floatStr);
+    lcd.print(buffer);
+    lcd.setCursor(0, 1);
+    dtostrf(P_S, 5, 2, floatStr); // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "Lade P: %s mW", floatStr);
+    lcd.print(buffer);
+  }
+}
+// Zusätliche Ausgabe für DEBUGGING (;
+void Serial_OUTPUT()
+{
   Serial.print("Spannung Zelle [V]: ");
   Serial.println(Uges);
   Serial.print("Ausgangsstromstärke I [mA]: ");
   Serial.println(I_V);
   Serial.print("Ausgangsleistung P [mW]: ");
   Serial.println(P_V);
-  Serial.print("Ladung Kondensator Q [mAs]:");
+  Serial.print("Ladung Kondensator Q [mC]:");
   Serial.println(Q_S);
   Serial.print("LadeLeistung P [mW]: ");
   Serial.println(P_S);
@@ -248,8 +246,8 @@ void measurementFunction()
   }
   Uges = busVoltage_V_1;
   P_V = power_mW_2;
-  I_V = current_mA_1;
+  I_V = current_mA_2;
   float Qsalt = Q_S;
-  Q_S = Qsalt +(current_mA_1 - current_mA_2)/1000 * interval ; // (interval / 1000);
+  Q_S = Qsalt + (current_mA_1 - current_mA_2) / 1000 * interval; // integration for charge
   P_S = power_mW_1 - power_mW_2;
 }
