@@ -1,5 +1,3 @@
-
-
 /***************************************************************************
  * Example sketch for the ina219_1_WE library
  *
@@ -145,13 +143,25 @@ void getTaste()
   if (analogWert > 50 && analogWert < 150 && x > 0)
   {
     x++;
+    LCD_OUTPUT();
   }
   // DOWN
   if (analogWert > 200 && analogWert < 300 && x < MAXLINES)
   {
     x--;
+    LCD_OUTPUT();
   }
 }
+void LCD_OUTPUT() {
+  char buffer[16];
+  if (x=0){
+    sprintf(buffer, "Spannung: %.2f V", Uges); 
+    lcd.print(buffer);
+    sprintf(buffer, "Spannung: %.2f V", Uges);
+    lcd.print(buffer);
+    }
+  
+  }
 void measurementFunction()
 {
   float busVoltage_V_1 = 0.0; // benutzen
