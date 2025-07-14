@@ -14,9 +14,9 @@
 #include <LiquidCrystal.h>
 
 #define I2C_ADDRESS_1 0x40
-#define I2C_ADDRESS_2 0x41
+#define I2C_ADDRESS_2 0x45
 
-#define ONLYONE true
+#define ONLYONE false
 #define LCDBright A1
 #define MAXLINES 3
 
