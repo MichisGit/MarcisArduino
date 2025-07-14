@@ -21,7 +21,7 @@
 #define MAXLINES 3
 
 unsigned long previousMillis = 0;
-const long interval = 500; // 500ms
+const long interval = 800; // 500ms
 
 /* There are several ways to create your ina219_1 object:
  * ina219_1_WE ina219_1 = ina219_1_WE(); -> uses Wire / I2C Address = 0x40
@@ -41,7 +41,7 @@ int x = 0;
 float Uges = 0;
 float P_V = 0;
 float I_V = 0;
-float Q_S = 0;
+float Q_S = 10;
 float P_S = 0;
 
 void setup()
@@ -82,7 +82,7 @@ void setup()
   SAMPLE_MODE_64    Mean Value 64 samples        34.05 ms
   SAMPLE_MODE_128   Mean Value 128 samples       68.10 ms
   */
-  // ina219_1.setADCMode(SAMPLE_MODE_128); // choose mode and uncomment for change of default
+   ina219_1.setADCMode(SAMPLE_MODE_32); // choose mode and uncomment for change of default
 
   /* Set measure mode
   POWER_DOWN - ina219_1 switched off
@@ -99,13 +99,13 @@ void setup()
    PG_160      160 mV                   1.6 A
    PG_320      320 mV                   3.2 A (DEFAULT)
   */
-  // ina219_1.setPGain(PG_320); // choose gain and uncomment for change of default
+  ina219_1.setPGain(PG_80); // choose gain and uncomment for change of default
 
   /* Set Bus Voltage Range
    BRNG_16   -> 16 V
    BRNG_32   -> 32 V (DEFAULT)
   */
-  // ina219_1.setBusRange(BRNG_32); // choose range and uncomment for change of default
+  ina219_1.setBusRange(BRNG_16); // choose range and uncomment for change of default
 
   Serial.println("ina219_1 Current Sensor Example Sketch - Continuous");
 
@@ -154,37 +154,60 @@ void getTaste()
     LCD_OUTPUT();
   }
 }
+
+
+
 void LCD_OUTPUT() {
-  char buffer[16];
+  char buffer[16], floatStr[10];
+  lcd.clear();
+  lcd.setCursor(0,0);
   if (x=0){
-    sprintf(buffer, "Spannung: %.2f V", Uges); 
+      
+    dtostrf(Uges, 4, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "Spannung: %s V", floatStr);
     lcd.print(buffer);
-    sprintf(buffer, "P am V: %.2f mW", P_V);
+    lcd.setCursor(0,1);
+    dtostrf(P_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "P am V: %.2f mW",floatStr );
     lcd.print(buffer);
     }
     else if (x=1){
-    sprintf(buffer, "P am V: %.2f mW", P_V); 
+    dtostrf(P_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "P am V: %.2f mW",floatStr ); 
     lcd.print(buffer);
-    sprintf(buffer, "I am V: %.2f mA", I_V);
+    lcd.setCursor(0,1);
+    dtostrf(I_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "I am V: %.2f mA", floatStr);
     lcd.print(buffer);
     }
     else if (x=2){
-    sprintf(buffer, "I am V: %.2f mA", I_V); 
+    dtostrf(I_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "I am V: %.2f mA",floatStr ); 
     lcd.print(buffer);
-    sprintf(buffer, "Landung: %.2f mAs", Q_S);
+    lcd.setCursor(0,1);
+    dtostrf(Q_S, 8, 1, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "Landung: %.2f mAs",floatStr );
     lcd.print(buffer);
     }
     else if (x=3){
-    sprintf(buffer, "Landung: %.2f mAs", Q_S); 
+    dtostrf(Q_S, 8, 1, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "Landung: %.2f mAs",floatStr); 
     lcd.print(buffer);
-    sprintf(buffer, "Lade P: %.2f mW", P_S);
+    lcd.setCursor(0,1);
+    dtostrf(P_S, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
+    sprintf(buffer, "Lade P: %.2f mW",floatStr );
     lcd.print(buffer);
     }
    
   
   }
   void Serial_OUTPUT()
-{
+{ 
+  char floatStr[10];
+  dtostrf(I_V, 5, 2, floatStr);  // (Wert, Breite, Nachkommastellen, Zielpuffer)
+  char buffer[17];
+  sprintf(buffer, "PamV: %s mW", floatStr);
+  Serial.println(buffer);
   Serial.print("Spannung Zelle [V]: ");
   Serial.println(Uges);
   Serial.print("Ausgangsstromstärke I [mA]: ");
@@ -223,7 +246,8 @@ void measurementFunction()
   Uges = busVoltage_V_1;
   P_V = power_mW_2;
   I_V = current_mA_2;
-  Q_S = (current_mA_1 - current_mA_2) * (interval / 1000) + Q_S;
+  float Qsalt = Q_S;
+  Q_S = Qsalt +(current_mA_1 - current_mA_2)/1000 * interval ; // (interval / 1000);
   P_S = power_mW_1 - power_mW_2;
 }
 
